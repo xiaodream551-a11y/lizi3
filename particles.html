@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Blue Crystal Particles</title>
+  <style>
+    :root {
+      --bg-1: #001133;
+      --bg-2: #001a3d;
+      --accent: #00ffff;
+      --accent-soft: #7ffcff;
+      --text: #d9f6ff;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: "Azeret Mono", "Space Grotesk", "SF Mono", monospace;
+      background: radial-gradient(1200px 800px at 10% 10%, #00204f, var(--bg-1));
+      color: var(--text);
+    }
+    #app {
+      position: fixed;
+      inset: 0;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    .hud {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      padding: 10px 14px;
+      background: rgba(0, 8, 24, 0.6);
+      border: 1px solid rgba(0, 255, 255, 0.2);
+      border-radius: 10px;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      backdrop-filter: blur(6px);
+    }
+    .hud strong {
+      display: block;
+      font-size: 14px;
+      color: var(--accent);
+      margin-top: 6px;
+    }
+    .hud-row {
+      margin-top: 6px;
+      display: flex;
+      gap: 8px;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      text-transform: none;
+    }
+    .hud-row span {
+      color: var(--accent-soft);
+    }
+    .hint {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      font-size: 12px;
+      opacity: 0.7;
+    }
+    .pill {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      margin-right: 6px;
+    }
+    #input-video {
+      display: none;
+    }
+    #input-video.debug {
+      display: block;
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      width: 200px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 14px;
+      border: 1px solid rgba(0, 255, 255, 0.25);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+      opacity: 0.75;
+      z-index: 3;
+    }
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+      background: radial-gradient(800px 600px at 20% 20%, rgba(0, 255, 255, 0.12), rgba(0, 8, 24, 0.8));
+      color: var(--text);
+      letter-spacing: 0.04em;
+      transition: opacity 0.4s ease;
+      z-index: 4;
+    }
+    .overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .overlay-card {
+      max-width: 420px;
+      padding: 24px 28px;
+      border-radius: 16px;
+      background: rgba(0, 12, 28, 0.75);
+      border: 1px solid rgba(0, 255, 255, 0.18);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    }
+    .overlay-title {
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+    .overlay-text {
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 14px;
+    }
+    .overlay-button {
+      appearance: none;
+      border: none;
+      border-radius: 999px;
+      padding: 10px 18px;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #00122b;
+      background: linear-gradient(120deg, #7ffcff, #00a8ff);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .overlay-button:disabled {
+      cursor: default;
+      opacity: 0.6;
+    }
+    .overlay-button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px rgba(0, 168, 255, 0.35);
+    }
+    .overlay-note {
+      margin-top: 10px;
+      font-size: 12px;
+      color: rgba(217, 246, 255, 0.7);
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <div class="hud">
+    Mode
+    <strong id="mode">TRAIL</strong>
+    <div class="hud-row">Gesture: <span id="gesture">--</span></div>
+    <div class="hud-row">Tracking: <span id="tracking">Initializing</span></div>
+  </div>
+  <div class="hint">
+    <span class="pill">1</span>Trail
+    <span class="pill">2</span>Ring
+    <span class="pill">3</span>Orb
+    <span class="pill">4</span>Sword
+  </div>
+  <div id="camera-overlay" class="overlay">
+    <div class="overlay-card">
+      <div class="overlay-title">Camera Access</div>
+      <div id="overlay-text" class="overlay-text">Click Start Camera to request access.</div>
+      <button id="start-camera" class="overlay-button">Start Camera</button>
+      <div id="overlay-note" class="overlay-note">Chrome: address bar lock icon → Camera → Allow.</div>
+    </div>
+  </div>
+  <video id="input-video" autoplay muted playsinline></video>
+
+  <script src="https://unpkg.com/@mediapipe/hands@0.4.1646424915/hands.js"></script>
+  <script type="module">
+    import * as THREE from "https://unpkg.com/three@0.160.0/build/three.module.js";
+    import { EffectComposer } from "https://unpkg.com/three@0.160.0/examples/jsm/postprocessing/EffectComposer.js";
+    import { RenderPass } from "https://unpkg.com/three@0.160.0/examples/jsm/postprocessing/RenderPass.js";
+    import { UnrealBloomPass } from "https://unpkg.com/three@0.160.0/examples/jsm/postprocessing/UnrealBloomPass.js";
+
+    const container = document.getElementById("app");
+    const modeLabel = document.getElementById("mode");
+    const gestureLabel = document.getElementById("gesture");
+    const trackingLabel = document.getElementById("tracking");
+    const cameraOverlay = document.getElementById("camera-overlay");
+    const overlayText = document.getElementById("overlay-text");
+    const overlayNote = document.getElementById("overlay-note");
+    const startButton = document.getElementById("start-camera");
+    const video = document.getElementById("input-video");
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0x001133, 5, 40);
+
+    const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 0, 18);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true, powerPreference: "high-performance" });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.25));
+    renderer.setClearColor(0x000814, 0);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    container.appendChild(renderer.domElement);
+
+    const composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
+    const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.3, 0.4, 0.1);
+    composer.addPass(bloomPass);
+
+    const particleCount = 36000;
+    const positions = new Float32Array(particleCount * 3);
+    const targets = new Float32Array(particleCount * 3);
+    const speeds = new Float32Array(particleCount);
+    const phases = new Float32Array(particleCount);
+    const sizes = new Float32Array(particleCount);
+    const noiseSeed = new Float32Array(particleCount * 3);
+
+    const spherePositions = new Float32Array(particleCount * 3);
+    const ringPositions = new Float32Array(particleCount * 3);
+    const swordPositions = new Float32Array(particleCount * 3);
+
+    const random = (min, max) => min + Math.random() * (max - min);
+
+    for (let i = 0; i < particleCount; i += 1) {
+      const i3 = i * 3;
+      positions[i3] = random(-4, 4);
+      positions[i3 + 1] = random(-4, 4);
+      positions[i3 + 2] = random(-4, 4);
+
+      targets[i3] = positions[i3];
+      targets[i3 + 1] = positions[i3 + 1];
+      targets[i3 + 2] = positions[i3 + 2];
+
+      speeds[i] = random(0.006, 0.018);
+      phases[i] = random(0, Math.PI * 2);
+      sizes[i] = random(0.6, 1.4);
+
+      noiseSeed[i3] = random(-1, 1);
+      noiseSeed[i3 + 1] = random(-1, 1);
+      noiseSeed[i3 + 2] = random(-1, 1);
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute("phase", new THREE.BufferAttribute(phases, 1));
+    geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
+
+    const uniforms = {
+      uTime: { value: 0 },
+      uColorA: { value: new THREE.Color(0x00ffff) },
+      uColorB: { value: new THREE.Color(0x0a4fff) },
+      uOpacity: { value: 0.9 },
+    };
+
+    const material = new THREE.ShaderMaterial({
+      uniforms,
+      vertexShader: `
+        uniform float uTime;
+        attribute float phase;
+        attribute float size;
+        varying float vPhase;
+        varying float vDepth;
+
+        void main() {
+          vPhase = phase;
+          vec3 pos = position;
+          float wobble = sin(uTime * 0.8 + phase) * 0.04;
+          pos.xy += vec2(wobble, -wobble);
+          vDepth = pos.z;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+          gl_PointSize = size * (180.0 / -gl_Position.z);
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 uColorA;
+        uniform vec3 uColorB;
+        uniform float uOpacity;
+        varying float vPhase;
+        varying float vDepth;
+
+        void main() {
+          float d = length(gl_PointCoord - vec2(0.5));
+          float mask = smoothstep(0.5, 0.1, d);
+          float pulse = 0.6 + 0.4 * sin(vPhase + vDepth * 0.35);
+          vec3 color = mix(uColorB, uColorA, pulse);
+          gl_FragColor = vec4(color, uOpacity * mask);
+        }
+      `,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+
+    const points = new THREE.Points(geometry, material);
+    scene.add(points);
+
+    const modes = ["TRAIL", "RING", "ORB", "SWORD"];
+    let modeIndex = 0;
+    let trackingActive = false;
+    let trackingInProgress = false;
+    const gestureToMode = {
+      TRAIL: 0,
+      RING: 1,
+      ORB: 2,
+      SWORD: 3,
+    };
+
+    const handTrail = [];
+    const maxTrail = 140;
+    const trailSpacing = 0.18;
+    const handState = {
+      present: false,
+      raw: new THREE.Vector3(),
+      smoothed: new THREE.Vector3(),
+      velocity: new THREE.Vector3(),
+      speed: 0,
+    };
+    const gestureState = {
+      current: "NONE",
+      candidate: "NONE",
+      frames: 0,
+    };
+
+    const fillSphere = () => {
+      for (let i = 0; i < particleCount; i += 1) {
+        const i3 = i * 3;
+        const u = Math.random();
+        const v = Math.random();
+        const theta = u * Math.PI * 2;
+        const phi = Math.acos(2 * v - 1);
+        const radius = Math.cbrt(Math.random()) * 3.0;
+        spherePositions[i3] = radius * Math.sin(phi) * Math.cos(theta);
+        spherePositions[i3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+        spherePositions[i3 + 2] = radius * Math.cos(phi);
+      }
+    };
+
+    const fillRing = () => {
+      for (let i = 0; i < particleCount; i += 1) {
+        const i3 = i * 3;
+        const angle = Math.random() * Math.PI * 2;
+        const ringRadius = random(4.2, 5.2);
+        const tubeRadius = random(0.2, 0.7);
+        ringPositions[i3] = (ringRadius + tubeRadius * Math.cos(angle * 3.0)) * Math.cos(angle);
+        ringPositions[i3 + 1] = (ringRadius + tubeRadius * Math.cos(angle * 3.0)) * Math.sin(angle);
+        ringPositions[i3 + 2] = Math.sin(angle * 3.0) * tubeRadius * 1.4;
+      }
+    };
+
+    const fillSword = () => {
+      for (let i = 0; i < particleCount; i += 1) {
+        const i3 = i * 3;
+        const t = Math.random();
+        const bladeLength = 10.0;
+        const bladeWidth = 0.7;
+        const guardWidth = 2.6;
+        const guardHeight = 0.4;
+        let x = 0;
+        let y = 0;
+        let z = random(-0.4, 0.4);
+
+        if (t < 0.7) {
+          const along = random(-bladeLength * 0.35, bladeLength * 0.65);
+          x = random(-bladeWidth, bladeWidth) * (1.0 - Math.abs(along) / bladeLength);
+          y = along;
+        } else if (t < 0.9) {
+          x = random(-guardWidth, guardWidth);
+          y = random(-guardHeight, guardHeight) - bladeLength * 0.4;
+        } else {
+          x = random(-0.6, 0.6);
+          y = random(-1.6, -0.6) - bladeLength * 0.5;
+          z += 0.4;
+        }
+
+        swordPositions[i3] = x * 0.7;
+        swordPositions[i3 + 1] = y * 0.7;
+        swordPositions[i3 + 2] = z;
+      }
+    };
+
+    const fillTrail = () => {
+      handTrail.length = 0;
+      let angle = 0;
+      for (let i = 0; i < maxTrail; i += 1) {
+        const radius = 0.4 + i * 0.03;
+        handTrail.push({
+          x: Math.cos(angle) * radius,
+          y: Math.sin(angle) * radius,
+          z: -i * trailSpacing,
+        });
+        angle += 0.35;
+      }
+    };
+
+    fillSphere();
+    fillRing();
+    fillSword();
+    fillTrail();
+
+    const applyTargets = (targetPositions) => {
+      for (let i = 0; i < particleCount; i += 1) {
+        const i3 = i * 3;
+        targets[i3] = targetPositions[i3];
+        targets[i3 + 1] = targetPositions[i3 + 1];
+        targets[i3 + 2] = targetPositions[i3 + 2];
+      }
+    };
+
+    const updateTrailTargets = (time, speed) => {
+      if (handTrail.length < maxTrail) return;
+      const spiralRadius = 0.9 + Math.min(speed * 10.0, 2.6) + Math.sin(time * 0.4) * 0.3;
+
+      for (let i = 0; i < particleCount; i += 1) {
+        const i3 = i * 3;
+        const segmentIndex = i % handTrail.length;
+        const segment = handTrail[segmentIndex];
+        const angle = segmentIndex * 0.35 + time * 1.2 + phases[i];
+        const swirlX = Math.cos(angle) * spiralRadius;
+        const swirlY = Math.sin(angle) * spiralRadius;
+        const swirlZ = Math.sin(angle * 0.7) * 0.6;
+        const noiseX = noiseSeed[i3] * 0.5;
+        const noiseY = noiseSeed[i3 + 1] * 0.5;
+        const noiseZ = noiseSeed[i3 + 2] * 0.5;
+
+        targets[i3] = segment.x + swirlX + noiseX;
+        targets[i3 + 1] = segment.y + swirlY + noiseY;
+        targets[i3 + 2] = segment.z + swirlZ + noiseZ;
+      }
+    };
+
+    const updateModeLabel = () => {
+      modeLabel.textContent = modes[modeIndex];
+    };
+
+    const setMode = (index) => {
+      modeIndex = ((index % modes.length) + modes.length) % modes.length;
+      updateModeLabel();
+
+      if (modes[modeIndex] === "RING") {
+        applyTargets(ringPositions);
+      }
+      if (modes[modeIndex] === "ORB") {
+        applyTargets(spherePositions);
+      }
+      if (modes[modeIndex] === "SWORD") {
+        applyTargets(swordPositions);
+      }
+    };
+
+    setMode(modeIndex);
+    gestureLabel.textContent = gestureState.current;
+
+    const onKey = (event) => {
+      if (event.key === "1") setMode(0);
+      if (event.key === "2") setMode(1);
+      if (event.key === "3") setMode(2);
+      if (event.key === "4") setMode(3);
+      if (event.key === "v" || event.key === "V") video.classList.toggle("debug");
+    };
+
+    window.addEventListener("keydown", onKey);
+
+    const updateSwordPulse = (time) => {
+      const pulse = 0.25 + Math.sin(time * 3.0) * 0.12;
+      for (let i = 0; i < particleCount; i += 1) {
+        const i3 = i * 3;
+        targets[i3] = swordPositions[i3] * (1.0 + pulse);
+        targets[i3 + 1] = swordPositions[i3 + 1] * (1.0 + pulse);
+        targets[i3 + 2] = swordPositions[i3 + 2] * (1.0 + pulse);
+      }
+    };
+
+    const pushTrailPoint = (x, y, z) => {
+      const tail = handTrail.pop();
+      if (!tail) return;
+      tail.x = x;
+      tail.y = y;
+      tail.z = z;
+      handTrail.unshift(tail);
+    };
+
+    const updateAutoTrail = (time) => {
+      const head = {
+        x: Math.sin(time * 0.5) * 2.0,
+        y: Math.cos(time * 0.4) * 1.6,
+        z: Math.sin(time * 0.3) * 1.2,
+      };
+      pushTrailPoint(head.x, head.y, head.z);
+    };
+
+    const clock = new THREE.Clock();
+
+    const tick = () => {
+      const time = clock.getElapsedTime();
+      uniforms.uTime.value = time;
+
+      if (modes[modeIndex] === "TRAIL") {
+        if (handState.present) {
+          pushTrailPoint(handState.smoothed.x, handState.smoothed.y, handState.smoothed.z);
+        } else {
+          updateAutoTrail(time);
+        }
+        updateTrailTargets(time, handState.speed);
+      } else if (modes[modeIndex] === "SWORD") {
+        updateSwordPulse(time);
+      }
+
+      const posAttr = geometry.getAttribute("position");
+      for (let i = 0; i < particleCount; i += 1) {
+        const i3 = i * 3;
+        positions[i3] += (targets[i3] - positions[i3]) * speeds[i];
+        positions[i3 + 1] += (targets[i3 + 1] - positions[i3 + 1]) * speeds[i];
+        positions[i3 + 2] += (targets[i3 + 2] - positions[i3 + 2]) * speeds[i];
+      }
+      posAttr.needsUpdate = true;
+
+      points.rotation.y = Math.sin(time * 0.15) * 0.2;
+      points.rotation.x = Math.cos(time * 0.1) * 0.1;
+
+      composer.render();
+      requestAnimationFrame(tick);
+    };
+
+    tick();
+
+    const onResize = () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      composer.setSize(window.innerWidth, window.innerHeight);
+      bloomPass.setSize(window.innerWidth, window.innerHeight);
+    };
+
+    window.addEventListener("resize", onResize);
+
+    const distance = (a, b) => {
+      const dx = a.x - b.x;
+      const dy = a.y - b.y;
+      const dz = (a.z || 0) - (b.z || 0);
+      return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    };
+
+    const angleBetween = (a, b, c) => {
+      const abx = a.x - b.x;
+      const aby = a.y - b.y;
+      const abz = (a.z || 0) - (b.z || 0);
+      const cbx = c.x - b.x;
+      const cby = c.y - b.y;
+      const cbz = (c.z || 0) - (b.z || 0);
+      const dot = abx * cbx + aby * cby + abz * cbz;
+      const mag = Math.sqrt(abx * abx + aby * aby + abz * abz) * Math.sqrt(cbx * cbx + cby * cby + cbz * cbz);
+      if (mag === 0) return 0;
+      return Math.acos(Math.min(Math.max(dot / mag, -1), 1)) * (180 / Math.PI);
+    };
+
+    const detectGesture = (landmarks) => {
+      const angles = {
+        thumb: angleBetween(landmarks[4], landmarks[3], landmarks[2]),
+        index: angleBetween(landmarks[8], landmarks[6], landmarks[5]),
+        middle: angleBetween(landmarks[12], landmarks[10], landmarks[9]),
+        ring: angleBetween(landmarks[16], landmarks[14], landmarks[13]),
+        pinky: angleBetween(landmarks[20], landmarks[18], landmarks[17]),
+      };
+
+      const extended = {
+        thumb: angles.thumb > 160,
+        index: angles.index > 165,
+        middle: angles.middle > 165,
+        ring: angles.ring > 160,
+        pinky: angles.pinky > 160,
+      };
+
+      const curled = {
+        thumb: angles.thumb < 110,
+        index: angles.index < 110,
+        middle: angles.middle < 110,
+        ring: angles.ring < 110,
+        pinky: angles.pinky < 110,
+      };
+
+      const palmWidth = distance(landmarks[5], landmarks[17]) || 0.2;
+      const pinchThreshold = palmWidth * 0.4;
+      const spreadThreshold = palmWidth * 1.4;
+
+      const indexMiddleDist = distance(landmarks[8], landmarks[12]);
+      const indexPinkyDist = distance(landmarks[8], landmarks[20]);
+
+      const isTrail = extended.index && extended.middle && curled.ring && curled.pinky && curled.thumb && indexMiddleDist < pinchThreshold;
+      const isOpen = extended.thumb && extended.index && extended.middle && extended.ring && extended.pinky && indexPinkyDist > spreadThreshold;
+      const isFist = curled.thumb && curled.index && curled.middle && curled.ring && curled.pinky;
+      const isRock = extended.index && extended.pinky && curled.middle && curled.ring && curled.thumb;
+
+      if (isRock) return "SWORD";
+      if (isTrail) return "TRAIL";
+      if (isOpen) return "RING";
+      if (isFist) return "ORB";
+      return "NONE";
+    };
+
+    const updateGestureState = (gesture) => {
+      if (gesture === gestureState.candidate) {
+        gestureState.frames += 1;
+      } else {
+        gestureState.candidate = gesture;
+        gestureState.frames = 1;
+      }
+
+      const requiredFrames = gesture === "NONE" ? 10 : 6;
+      if (gestureState.frames >= requiredFrames && gesture !== gestureState.current) {
+        gestureState.current = gesture;
+        gestureLabel.textContent = gestureState.current;
+        if (gestureToMode[gesture] !== undefined) {
+          setMode(gestureToMode[gesture]);
+        }
+      }
+    };
+
+    const updateHandState = (landmarks) => {
+      let sumX = 0;
+      let sumY = 0;
+      let sumZ = 0;
+      const palmIndices = [0, 5, 9, 13, 17];
+      for (const idx of palmIndices) {
+        sumX += landmarks[idx].x;
+        sumY += landmarks[idx].y;
+        sumZ += landmarks[idx].z;
+      }
+      const cx = sumX / palmIndices.length;
+      const cy = sumY / palmIndices.length;
+      const cz = sumZ / palmIndices.length;
+
+      const worldX = (cx - 0.5) * 12.0;
+      const worldY = (0.5 - cy) * 8.0;
+      const worldZ = -cz * 8.0;
+
+      handState.raw.set(worldX, worldY, worldZ);
+      if (!handState.present) {
+        handState.smoothed.copy(handState.raw);
+        handState.velocity.set(0, 0, 0);
+      } else {
+        handState.velocity.copy(handState.raw).sub(handState.smoothed);
+        handState.smoothed.lerp(handState.raw, 0.35);
+      }
+      handState.speed = handState.velocity.length();
+      handState.present = true;
+    };
+
+    const getRightHandIndex = (results) => {
+      if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) return -1;
+      const handedness = results.multiHandedness || [];
+      for (let i = 0; i < handedness.length; i += 1) {
+        const classification = handedness[i].classification ? handedness[i].classification[0] : handedness[i];
+        if (classification && classification.label === "Right") return i;
+      }
+      if (results.multiHandLandmarks.length === 1) return 0;
+      return -1;
+    };
+
+    const onResults = (results) => {
+      const rightIndex = getRightHandIndex(results);
+      if (rightIndex === -1) {
+        if (handState.present) {
+          handState.present = false;
+          handState.speed = 0;
+          handState.velocity.set(0, 0, 0);
+        }
+        trackingLabel.textContent = "No right hand";
+        updateGestureState("NONE");
+        return;
+      }
+
+      trackingLabel.textContent = "Right hand";
+      const landmarks = results.multiHandLandmarks[rightIndex];
+      updateHandState(landmarks);
+      const gesture = detectGesture(landmarks);
+      updateGestureState(gesture);
+    };
+
+    const startHandTracking = async () => {
+      if (typeof Hands === "undefined") {
+        trackingLabel.textContent = "MediaPipe missing";
+        overlayText.textContent = "MediaPipe failed to load.";
+        overlayNote.textContent = "Check network access to the CDN and reload.";
+        return false;
+      }
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        trackingLabel.textContent = "Camera not supported";
+        overlayText.textContent = "Camera not supported in this browser.";
+        overlayNote.textContent = "Try a different browser (Chrome/Safari).";
+        return false;
+      }
+
+      overlayText.textContent = "Requesting camera access...";
+      overlayNote.textContent = "Look for the permission prompt from Chrome.";
+      trackingLabel.textContent = "Requesting camera";
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 640, height: 480, facingMode: "user" },
+        });
+        video.srcObject = stream;
+        await video.play();
+      } catch (error) {
+        const reason = error && error.name ? error.name : "UnknownError";
+        trackingLabel.textContent = "Camera blocked";
+        overlayText.textContent = "Camera permission blocked.";
+        overlayNote.textContent = `Error: ${reason}. Allow camera access in the browser and try again.`;
+        return false;
+      }
+
+      cameraOverlay.classList.add("hidden");
+      trackingLabel.textContent = "Tracking...";
+
+      const hands = new Hands({
+        locateFile: (file) => `https://unpkg.com/@mediapipe/hands@0.4.1646424915/${file}`,
+      });
+      hands.setOptions({
+        maxNumHands: 1,
+        modelComplexity: 1,
+        minDetectionConfidence: 0.7,
+        minTrackingConfidence: 0.6,
+      });
+      hands.onResults(onResults);
+
+      let processing = false;
+      const processFrame = async () => {
+        if (!processing && video.readyState >= 2) {
+          processing = true;
+          await hands.send({ image: video });
+          processing = false;
+        }
+        requestAnimationFrame(processFrame);
+      };
+      processFrame();
+      return true;
+    };
+
+    const beginTracking = async () => {
+      if (trackingInProgress || trackingActive) return;
+      trackingInProgress = true;
+      startButton.disabled = true;
+      startButton.textContent = "Starting...";
+      const ok = await startHandTracking();
+      trackingInProgress = false;
+      trackingActive = ok;
+      if (ok) {
+        startButton.textContent = "Running";
+        startButton.disabled = true;
+      } else {
+        startButton.disabled = false;
+        startButton.textContent = "Start Camera";
+      }
+    };
+
+    startButton.addEventListener("click", beginTracking);
+  </script>
+</body>
+</html>

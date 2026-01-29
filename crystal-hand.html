@@ -1,0 +1,1186 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Blue Crystal Hand Particles</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Oxanium:wght@300;500;700&family=Space+Grotesk:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-deep: #001133;
+        --bg-mid: #00204d;
+        --bg-light: #003b80;
+        --crystal: #00ffff;
+        --glow: #7ffcff;
+        --text: #d7f9ff;
+        --glass: rgba(0, 17, 51, 0.58);
+        --border: rgba(0, 255, 255, 0.25);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        font-family: "Space Grotesk", "Arial", sans-serif;
+        color: var(--text);
+        background: radial-gradient(circle at top, #003b80 0%, #001133 55%, #000814 100%);
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: -30%;
+        background:
+          radial-gradient(circle at 20% 20%, rgba(0, 255, 255, 0.25), transparent 45%),
+          radial-gradient(circle at 70% 30%, rgba(0, 128, 255, 0.35), transparent 50%),
+          radial-gradient(circle at 40% 80%, rgba(0, 255, 255, 0.12), transparent 55%);
+        opacity: 0.6;
+        pointer-events: none;
+      }
+
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background:
+          linear-gradient(120deg, rgba(0, 255, 255, 0.05), transparent 60%),
+          repeating-linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.04) 0px,
+            rgba(255, 255, 255, 0.04) 1px,
+            transparent 1px,
+            transparent 48px
+          );
+        opacity: 0.4;
+        pointer-events: none;
+      }
+
+      #app {
+        position: fixed;
+        inset: 0;
+      }
+
+      canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      #hud {
+        position: fixed;
+        top: 24px;
+        left: 24px;
+        width: 300px;
+        padding: 20px 22px;
+        border-radius: 16px;
+        background: linear-gradient(160deg, rgba(0, 255, 255, 0.08), transparent 60%),
+          var(--glass);
+        border: 1px solid var(--border);
+        backdrop-filter: blur(12px);
+        box-shadow: 0 0 30px rgba(0, 255, 255, 0.15);
+        animation: hudIn 1s ease-out both;
+      }
+
+      #hud .brand {
+        font-family: "Oxanium", sans-serif;
+        font-weight: 700;
+        font-size: 13px;
+        letter-spacing: 0.42em;
+        text-transform: uppercase;
+        color: var(--crystal);
+        margin-bottom: 12px;
+      }
+
+      #hud .label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.24em;
+        color: rgba(215, 249, 255, 0.6);
+      }
+
+      #hud .value {
+        font-size: 18px;
+        margin: 4px 0 12px;
+        color: var(--glow);
+      }
+
+      #status {
+        font-size: 12px;
+        color: rgba(215, 249, 255, 0.7);
+        margin-top: 6px;
+      }
+
+      #start {
+        width: 100%;
+        margin-top: 8px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: 1px solid rgba(0, 255, 255, 0.4);
+        background: linear-gradient(120deg, rgba(0, 255, 255, 0.15), rgba(0, 120, 255, 0.6));
+        color: var(--text);
+        font-family: "Oxanium", sans-serif;
+        font-size: 12px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: transform 0.2s ease, filter 0.2s ease;
+        animation: glowPulse 2.6s ease-in-out infinite;
+      }
+
+      #start:hover {
+        filter: brightness(1.2);
+        transform: translateY(-1px);
+      }
+
+      #start:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+      animation: none;
+      }
+
+      #hint {
+        margin-top: 12px;
+        font-size: 12px;
+        line-height: 1.5;
+        color: rgba(215, 249, 255, 0.7);
+      }
+
+      #badge {
+        position: fixed;
+        right: 24px;
+        bottom: 24px;
+        padding: 12px 18px;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 255, 255, 0.2);
+        background: rgba(0, 17, 51, 0.45);
+        font-family: "Oxanium", sans-serif;
+        font-size: 12px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--crystal);
+        box-shadow: 0 0 24px rgba(0, 255, 255, 0.12);
+      }
+
+      @keyframes hudIn {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes glowPulse {
+        0%,
+        100% {
+          box-shadow: 0 0 14px rgba(0, 255, 255, 0.25);
+        }
+        50% {
+          box-shadow: 0 0 26px rgba(0, 255, 255, 0.45);
+        }
+      }
+
+      @media (max-width: 700px) {
+        #hud {
+          width: calc(100% - 48px);
+          left: 24px;
+          right: 24px;
+        }
+
+        #badge {
+          right: 16px;
+          bottom: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="scene"></canvas>
+    </div>
+
+    <div id="hud">
+      <div class="brand">Blue Crystal</div>
+      <div class="label">Gesture</div>
+      <div class="value" id="gesture">NONE</div>
+      <div class="label">Mode</div>
+      <div class="value" id="mode">RING</div>
+      <button id="start">Enable Camera</button>
+      <div id="status">Camera idle</div>
+      <div id="hint">
+        Right hand only. Index+Middle touch = Trail. Open palm = Ring. Fist = Orb. Rock on = Sword.
+      </div>
+    </div>
+
+    <div id="badge">Blue Crystal System</div>
+
+    <video id="video" autoplay muted playsinline style="display: none"></video>
+
+    <script>
+      (() => {
+        if (location.protocol === "file:") {
+          const statusEl = document.getElementById("status");
+          const startButton = document.getElementById("start");
+          if (statusEl) {
+            statusEl.textContent = "Use http://localhost for camera + modules";
+          }
+          if (startButton) {
+            startButton.disabled = true;
+            startButton.textContent = "Use Local Server";
+          }
+        }
+      })();
+    </script>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+        }
+      }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <script type="module">
+      import * as THREE from "three";
+      import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+      import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+      import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+
+      const STATE = {
+        TRAIL: "TRAIL",
+        RING: "RING",
+        ORB: "ORB",
+        SWORD: "SWORD",
+        NONE: "NONE",
+      };
+
+      const gestureEl = document.getElementById("gesture");
+      const modeEl = document.getElementById("mode");
+      const statusEl = document.getElementById("status");
+      const startButton = document.getElementById("start");
+      const video = document.getElementById("video");
+
+      const renderer = new THREE.WebGLRenderer({
+        canvas: document.getElementById("scene"),
+        antialias: true,
+        powerPreference: "high-performance",
+      });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setClearColor(0x000814, 1);
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 0.8;
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 100);
+      camera.position.set(0, 0, 5);
+
+      const composer = new EffectComposer(renderer);
+      composer.addPass(new RenderPass(scene, camera));
+      const bloom = new UnrealBloomPass(
+        new THREE.Vector2(window.innerWidth, window.innerHeight),
+        1.1,
+        0.8,
+        0.15
+      );
+      bloom.threshold = 0.25;
+      bloom.strength = 0.4;
+      bloom.radius = 0.2;
+      composer.addPass(bloom);
+
+      const particleCount = 500;
+      const positions = new Float32Array(particleCount * 3);
+      const targets = new Float32Array(particleCount * 3);
+      const velocities = new Float32Array(particleCount * 3);
+      const seeds = new Float32Array(particleCount);
+      const tints = new Float32Array(particleCount);
+      const trailOffsets = new Float32Array(particleCount * 3);
+
+      function randomUnit() {
+        const u = Math.random();
+        const v = Math.random();
+        const theta = 2 * Math.PI * u;
+        const phi = Math.acos(2 * v - 1);
+        return {
+          x: Math.sin(phi) * Math.cos(theta),
+          y: Math.cos(phi),
+          z: Math.sin(phi) * Math.sin(theta),
+        };
+      }
+
+      function generateSphere(count, radius) {
+        const data = new Float32Array(count * 3);
+        for (let i = 0, i3 = 0; i < count; i++, i3 += 3) {
+          const dir = randomUnit();
+          const r = Math.cbrt(Math.random()) * radius;
+          data[i3] = dir.x * r;
+          data[i3 + 1] = dir.y * r;
+          data[i3 + 2] = dir.z * r;
+        }
+        return data;
+      }
+
+      function generateRing(count, radius, tube) {
+        const data = new Float32Array(count * 3);
+        for (let i = 0, i3 = 0; i < count; i++, i3 += 3) {
+          const theta = Math.random() * Math.PI * 2;
+          const phi = Math.random() * Math.PI * 2;
+          const x = (radius + tube * Math.cos(phi)) * Math.cos(theta);
+          const y = (radius + tube * Math.cos(phi)) * Math.sin(theta);
+          const z = tube * Math.sin(phi);
+          data[i3] = x;
+          data[i3 + 1] = y;
+          data[i3 + 2] = z;
+        }
+        return data;
+      }
+
+      function generateIdlePlane(count, width, height, depth) {
+        const data = new Float32Array(count * 3);
+        const cols = Math.ceil(Math.sqrt((count * width) / height));
+        const rows = Math.ceil(count / cols);
+        const cellW = width / cols;
+        const cellH = height / rows;
+        let index = 0;
+        for (let r = 0; r < rows && index < count; r += 1) {
+          for (let c = 0; c < cols && index < count; c += 1) {
+            const u = (c + 0.5) / cols;
+            const v = (r + 0.5) / rows;
+            const jitterX = (Math.random() - 0.5) * cellW * 0.9;
+            const jitterY = (Math.random() - 0.5) * cellH * 0.9;
+            const x = (u - 0.5) * width + jitterX + (Math.random() - 0.5) * width * 0.08;
+            const y = (0.5 - v) * height + jitterY + (Math.random() - 0.5) * height * 0.08;
+            const z = (Math.random() - 0.5) * depth;
+            const i3 = index * 3;
+            data[i3] = x;
+            data[i3 + 1] = y;
+            data[i3 + 2] = z;
+            index += 1;
+          }
+        }
+        return data;
+      }
+
+      const idleTemplate = generateIdlePlane(particleCount, 7.2, 4.2, 1.2);
+      const orbTemplate = generateSphere(particleCount, 1.35);
+      const ringTemplate = generateRing(particleCount, 1.35, 0.68);
+
+      for (let i = 0, i3 = 0; i < particleCount; i++, i3 += 3) {
+        positions[i3] = orbTemplate[i3];
+        positions[i3 + 1] = orbTemplate[i3 + 1];
+        positions[i3 + 2] = orbTemplate[i3 + 2];
+        targets[i3] = orbTemplate[i3];
+        targets[i3 + 1] = orbTemplate[i3 + 1];
+        targets[i3 + 2] = orbTemplate[i3 + 2];
+        seeds[i] = Math.random();
+        tints[i] = i % 2;
+           const dir = randomUnit();
+        const radius = Math.cbrt(Math.random()) * 0.9;
+        trailOffsets[i3] = dir.x * radius;
+        trailOffsets[i3 + 1] = dir.y * radius;
+        trailOffsets[i3 + 2] = dir.z * radius;
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3).setUsage(THREE.DynamicDrawUsage));
+      geometry.setAttribute("aTarget", new THREE.BufferAttribute(targets, 3).setUsage(THREE.DynamicDrawUsage));
+      geometry.setAttribute("aSeed", new THREE.BufferAttribute(seeds, 1));
+      geometry.setAttribute("aTint", new THREE.BufferAttribute(tints, 1));
+
+      const material = new THREE.ShaderMaterial({
+        uniforms: {
+          uTime: { value: 0 },
+          uLerp: { value: 0.35 },
+          uPointSize: { value: 4.4 },
+          uPulse: { value: 0 },
+          uSpin: { value: 0.15 },
+          uShape: { value: 0 },
+          uDrift: { value: 0.15 },
+          uFlicker: { value: 0.0 },
+          uOrient: { value: 0.0 },
+          uCenter: { value: new THREE.Vector3() },
+          uColorA: { value: new THREE.Color("#00b7ff") },
+          uColorB: { value: new THREE.Color("#f2fdff") },
+        },
+        vertexShader: `
+          attribute vec3 aTarget;
+          attribute float aSeed;
+          attribute float aTint;
+          uniform float uTime;
+          uniform float uLerp;
+          uniform float uPointSize;
+          uniform float uPulse;
+          uniform float uSpin;
+          uniform float uDrift;
+          uniform vec3 uCenter;
+          varying float vAlpha;
+          varying float vGlow;
+          varying float vSeed;
+          varying float vTint;
+          varying float vOrient;
+
+          void main() {
+            vec3 blended = mix(position, aTarget, uLerp);
+            float breath = 0.5 + 0.5 * sin(uTime * 1.4 + aSeed * 6.283);
+            float breathScale = step(0.01, uDrift);
+            vec3 drift = vec3(
+              sin(uTime * 0.6 + aSeed * 7.1),
+              cos(uTime * 0.5 + aSeed * 5.3),
+              sin(uTime * 0.7 + aSeed * 3.7)
+            ) * 0.02;
+            vec3 pos = blended + drift * uDrift;
+            pos *= 1.0 + uPulse;
+
+            float rot = uTime * uSpin;
+            mat2 r = mat2(cos(rot), -sin(rot), sin(rot), cos(rot));
+            pos.xz = r * pos.xz;
+
+            vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+            gl_Position = projectionMatrix * mvPosition;
+
+            float size = uPointSize * (0.7 + 0.9 * fract(aSeed * 13.7));
+            size *= 1.0 + breath * 0.4 * breathScale;
+            gl_PointSize = size * (36.0 / -mvPosition.z);
+
+            vAlpha = 0.35 + 0.35 * breath * breathScale;
+            vGlow = 0.5 + 0.5 * fract(aSeed * 3.3);
+            vSeed = aSeed;
+            vTint = aTint;
+            vec2 centerDir = aTarget.xy - uCenter.xy;
+            vOrient = atan(centerDir.y, centerDir.x) - 1.5707963;
+          }
+        `,
+        fragmentShader: `
+          precision highp float;
+          uniform vec3 uColorA;
+          uniform vec3 uColorB;
+          uniform float uShape;
+          uniform float uFlicker;
+          uniform float uTime;
+          uniform float uOrient;
+          varying float vAlpha;
+          varying float vGlow;
+          varying float vSeed;
+          varying float vTint;
+          varying float vOrient;
+
+          void main() {
+            vec2 uv = gl_PointCoord * 2.0 - 1.0;
+            float baseAngle = mix(vSeed * 6.28318, 0.0, step(0.5, uShape));
+            float angle = mix(baseAngle, vOrient, uOrient);
+            mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
+            vec2 p = rot * uv;
+            p.x *= 1.6;
+            p.y *= 0.82;
+
+            float d = dot(uv, uv);
+
+            float t = abs(p.y);
+            float taper = pow(max(0.0, 1.0 - t), 3.6);
+            float width = 0.05 + taper * 0.16;
+            float riceEdge = smoothstep(width, width - 0.01, abs(p.x));
+            float rice = riceEdge * step(t, 1.0);
+
+            vec2 blade = vec2(0.10, 0.9);
+            float bladeMask = step(abs(p.x), blade.x) * step(-0.1, p.y) * step(p.y, blade.y);
+            float tipMask = step(0.9, p.y) * step(p.y, 1.0) * step(abs(p.x), (1.0 - p.y) * 0.22);
+            float guardMask = step(abs(p.x), 0.42) * step(abs(p.y + 0.18), 0.06);
+            float handleMask = step(abs(p.x), 0.12) * step(p.y, -0.18) * step(-0.6, p.y);
+            float pommelMask = step(length(p - vec2(0.0, -0.75)), 0.12);
+            float sword = max(max(bladeMask, tipMask), max(guardMask, max(handleMask, pommelMask)));
+
+            float shapeMask = mix(rice, sword, step(0.5, uShape));
+            if (shapeMask < 0.5) discard;
+
+            float falloff = mix(exp(-3.2 * d), exp(-6.0 * d), step(0.5, uShape));
+            float flicker = 1.0 + uFlicker * sin(uTime * 10.0 + vSeed * 19.0);
+            vec3 baseColor = mix(uColorA, uColorB, vTint);
+            vec3 color = baseColor * (0.85 + 0.35 * vGlow) * flicker;
+            gl_FragColor = vec4(color, falloff * vAlpha);
+          }
+        `,
+        blending: THREE.AdditiveBlending,
+        transparent: true,
+        depthWrite: false,
+        depthTest: true,
+      });
+
+      const points = new THREE.Points(geometry, material);
+      scene.add(points);
+
+      const stateConfig = {
+        [STATE.NONE]: {
+          spring: 0.0,
+          damping: 1.0,
+          lerp: 0.16,
+          spin: 0.0,
+          size: 4.4,
+          drift: 0.0,
+          magnet: 0.0,
+          swirl: 0.0,
+          spinRate: 0.0,
+          smooth: true,
+          follow: 0.015,
+        },
+        [STATE.TRAIL]: {
+          spring: 0.0,
+          damping: 1.0,
+          lerp: 0.2,
+          spin: 0.0,
+          size: 4.4,
+          drift: 0.12,
+          magnet: 0.15,
+          swirl: 0.0,
+          spinRate: 0.0,
+          smooth: true,
+          follow: 0.05,
+        },
+        [STATE.RING]: {
+          spring: 0.0,
+          damping: 1.0,
+          lerp: 0.16,
+          spin: 0.0,
+          size: 4.4,
+          drift: 0.05,
+          magnet: 0.5,
+          swirl: 0.0,
+          spinRate: 1.1,
+          smooth: true,
+          follow: 0.025,
+        },
+        [STATE.ORB]: {
+          spring: 0.0,
+          damping: 1.0,
+          lerp: 0.16,
+          spin: 0.0,
+          size: 4.4,
+          drift: 0.05,
+          magnet: 0.45,
+          swirl: 0.0,
+          spinRate: 0.35,
+          smooth: true,
+          follow: 0.025,
+        },
+        [STATE.SWORD]: {
+          spring: 0.0,
+          damping: 1.0,
+          lerp: 0.2,
+          spin: 0.0,
+          size: 9.0,
+          drift: 0.08,
+          magnet: 0.2,
+          swirl: 0.0,
+          spinRate: 0.0,
+          smooth: true,
+          follow: 0.035,
+        },
+      };
+
+      const sequenceOrder = [STATE.TRAIL, STATE.RING, STATE.ORB, STATE.SWORD];
+      let sequenceIndex = 0;
+      let noneFrames = 0;
+      let rawGesture = STATE.NONE;
+      let lastSequenceGesture = STATE.NONE;
+      let detectedState = STATE.NONE;
+      let previousState = STATE.NONE;
+      let swordTimer = 0;
+      let pendingState = STATE.NONE;
+      let pendingFrames = 0;
+      let activeState = STATE.NONE;
+      let cameraState = "idle";
+      let cameraMessage = "Camera idle";
+      let handLabel = "NONE";
+      let usingFallbackHand = false;
+      const followOffset = new THREE.Vector3();
+
+      const handTarget = new THREE.Vector3();
+      const handPos = new THREE.Vector3();
+      const lastHandPos = new THREE.Vector3();
+      const handVel = new THREE.Vector3();
+      const handDir = new THREE.Vector3(0, 1, 0);
+      const handDelta = new THREE.Vector3();
+      const handEcho = new THREE.Vector3();
+      const trailUp = new THREE.Vector3();
+      const trailRight = new THREE.Vector3();
+      const trailForward = new THREE.Vector3();
+      let trailPhase = 0;
+      let handSpeed = 0;
+      let handPresent = false;
+      let handBusy = false;
+      let lastHandFrame = 0;
+
+      function distance(a, b) {
+        const dx = a.x - b.x;
+        const dy = a.y - b.y;
+        const dz = a.z - b.z;
+        return Math.hypot(dx, dy, dz);
+      }
+
+      function angleCos(a, b, c) {
+        const v1x = a.x - b.x;
+        const v1y = a.y - b.y;
+        const v1z = a.z - b.z;
+        const v2x = c.x - b.x;
+        const v2y = c.y - b.y;
+        const v2z = c.z - b.z;
+        const d1 = Math.hypot(v1x, v1y, v1z) || 1;
+        const d2 = Math.hypot(v2x, v2y, v2z) || 1;
+        return (v1x * v2x + v1y * v2y + v1z * v2z) / (d1 * d2);
+      }
+
+      function fingerState(lm, mcp, pip, tip, palmBase) {
+        const dTip = distance(lm[tip], lm[0]);
+        const dPip = distance(lm[pip], lm[0]);
+        const dMcp = distance(lm[mcp], lm[0]);
+        const extScore = (dTip - dMcp) / Math.max(palmBase, 0.0001);
+        const extended = extScore > 0.28 || dTip > dPip + palmBase * 0.02;
+        const curled = extScore < 0.14 || dTip < dPip;
+        return { extended, curled };
+      }
+
+      function detectGesture(lm) {
+        const palmBase =
+          (distance(lm[0], lm[5]) +
+            distance(lm[0], lm[9]) +
+            distance(lm[0], lm[13]) +
+            distance(lm[0], lm[17])) /
+          4;
+        const thumb = fingerState(lm, 2, 3, 4, palmBase);
+        const index = fingerState(lm, 5, 6, 8, palmBase);
+        const middle = fingerState(lm, 9, 10, 12, palmBase);
+        const ring = fingerState(lm, 13, 14, 16, palmBase);
+        const pinky = fingerState(lm, 17, 18, 20, palmBase);
+
+        const touching = distance(lm[8], lm[12]) < palmBase * 0.5;
+
+        const indexExt = index.extended;
+        const middleExt = middle.extended;
+        const ringExt = ring.extended;
+        const pinkyExt = pinky.extended;
+        const indexCurl = index.curled;
+        const middleCurl = middle.curled;
+        const ringCurl = ring.curled;
+        const pinkyCurl = pinky.curled;
+
+        const middleFolded = middleCurl || !middleExt;
+        const ringFolded = ringCurl || !ringExt;
+        const pinkyFolded = pinkyCurl || !pinkyExt;
+        const openPalm = indexExt && middleExt && ringExt && pinkyExt;
+        const fist = indexCurl && middleCurl && ringCurl && pinkyCurl;
+        const rockOn = indexExt && pinkyExt && middleFolded && ringFolded;
+        const trail = indexExt && middleExt && touching;
+
+        if (trail) return STATE.TRAIL;
+        if (rockOn) return STATE.SWORD;
+        if (fist) return STATE.ORB;
+        if (openPalm) return STATE.RING;
+        return STATE.NONE;
+      }
+
+      function updateDetectedState(next) {
+        if (next === rawGesture) {
+          pendingState = STATE.NONE;
+          pendingFrames = 0;
+          return;
+        }
+        if (next === pendingState) {
+          pendingFrames += 1;
+        } else {
+          pendingState = next;
+          pendingFrames = 1;
+        }
+        if (pendingFrames >= 3) {
+          rawGesture = next;
+          pendingState = STATE.NONE;
+          pendingFrames = 0;
+        }
+      }
+
+      function applySequenceGesture() {
+        if (rawGesture === STATE.NONE) {
+          noneFrames += 1;
+          detectedState = STATE.NONE;
+          if (noneFrames > 45) {
+            sequenceIndex = 0;
+          }
+          lastSequenceGesture = STATE.NONE;
+          return;
+        }
+
+        noneFrames = 0;
+        const expected = sequenceOrder[Math.min(sequenceIndex, sequenceOrder.length - 1)];
+        if (rawGesture === expected) {
+          detectedState = rawGesture;
+          if (rawGesture !== lastSequenceGesture && sequenceIndex < sequenceOrder.length) {
+            sequenceIndex += 1;
+            lastSequenceGesture = rawGesture;
+          }
+          return;
+        }
+        detectedState = sequenceIndex > 0 ? sequenceOrder[sequenceIndex - 1] : STATE.NONE;
+        if (rawGesture !== lastSequenceGesture) {
+          lastSequenceGesture = rawGesture;
+        }
+      }
+
+      function setCameraState(state, message) {
+        cameraState = state;
+        if (message) {
+          cameraMessage = message;
+        }
+      }
+
+      function updateCameraAvailability() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          setCameraState("error", "Camera API unavailable");
+          startButton.disabled = true;
+          startButton.textContent = "Camera Unavailable";
+          return false;
+        }
+        if (!window.isSecureContext) {
+          setCameraState("error", "Use https or localhost for camera");
+          startButton.disabled = true;
+          startButton.textContent = "Use https / localhost";
+          return false;
+        }
+        startButton.disabled = false;
+        startButton.textContent = "Enable Camera";
+        return true;
+      }
+
+      function updateHud() {
+        gestureEl.textContent = rawGesture;
+        modeEl.textContent = activeState;
+        if (cameraState === "active") {
+          if (!handPresent) {
+            statusEl.textContent = "Camera active · no hand";
+          } else if (usingFallbackHand && handLabel !== "Right") {
+            statusEl.textContent = `Tracking ${handLabel.toLowerCase()} hand`;
+          } else {
+            statusEl.textContent = "Tracking right hand";
+          }
+        } else {
+          statusEl.textContent = cameraMessage;
+        }
+      }
+
+      function applyTemplate(template, scale = 1) {
+        for (let i = 0, i3 = 0; i < particleCount; i++, i3 += 3) {
+          targets[i3] = template[i3] * scale;
+          targets[i3 + 1] = template[i3 + 1] * scale;
+          targets[i3 + 2] = template[i3 + 2] * scale;
+        }
+      }
+
+      function applyRing(time, spin) {
+        const angle = time * spin;
+        const c = Math.cos(angle);
+        const s = Math.sin(angle);
+        const ox = followOffset.x;
+        const oy = followOffset.y;
+        const oz = followOffset.z;
+        for (let i = 0, i3 = 0; i < particleCount; i++, i3 += 3) {
+          const x = ringTemplate[i3];
+          const y = ringTemplate[i3 + 1];
+          targets[i3] = x * c - y * s + ox;
+          targets[i3 + 1] = x * s + y * c + oy;
+          targets[i3 + 2] = ringTemplate[i3 + 2] + oz;
+        }
+      }
+
+      function applyOrb(time, spin, scale) {
+        const angle = time * spin;
+        const c = Math.cos(angle);
+        const s = Math.sin(angle);
+        const ox = followOffset.x;
+        const oy = followOffset.y;
+        const oz = followOffset.z;
+        for (let i = 0, i3 = 0; i < particleCount; i++, i3 += 3) {
+          const x = orbTemplate[i3] * scale;
+          const z = orbTemplate[i3 + 2];
+          targets[i3] = x * c + z * s + ox;
+          targets[i3 + 1] = orbTemplate[i3 + 1] * scale + oy;
+          targets[i3 + 2] = -x * s + z * c + oz;
+        }
+      }
+
+      function applySwordMotion(time, settle) {
+        const spin = time * 0.85;
+        const ripple = Math.sin(time * 1.2) * 0.25;
+        for (let i = 0, i3 = 0; i < particleCount; i++, i3 += 3) {
+          const seed = seeds[i];
+          const layer = Math.floor(seed * 4.0);
+          const lane = seed * 4.0 - layer;
+          const direction = layer % 2 === 0 ? 1.0 : -1.0;
+          const baseRadius = 1.2 + layer * 0.55;
+          const angle = spin * direction + lane * Math.PI * 2.4 + layer * 0.7;
+          const radius = baseRadius + 0.25 * Math.sin(time * 1.8 + seed * 9.0) + ripple;
+          const lift = (layer - 1.5) * 0.5 + Math.sin(time * 1.1 + seed * 12.0) * 0.2;
+          const flutter = 0.22 * Math.sin(time * 2.2 + seed * 17.0);
+          const x = Math.cos(angle) * (radius + flutter);
+          const y = Math.sin(angle) * (radius * 0.55) + lift;
+          const z = Math.sin(time * 0.9 + seed * 6.0) * 0.35;
+
+          const chaosRadius = 2.2 + 0.4 * Math.sin(time * 0.8 + seed * 11.0);
+          const chaosX = Math.sin(time * 1.6 + seed * 13.0) * chaosRadius;
+          const chaosY = Math.cos(time * 1.9 + seed * 9.0) * (chaosRadius * 0.7);
+          const chaosZ = Math.sin(time * 1.2 + seed * 7.0) * 0.8;
+
+          targets[i3] = chaosX + (x - chaosX) * settle;
+          targets[i3 + 1] = chaosY + (y - chaosY) * settle;
+          targets[i3 + 2] = chaosZ + (z - chaosZ) * settle;
+        }
+      }
+
+      function applyTrail(time, speedScale, delta) {
+        const axis = handDir;
+        if (Math.abs(axis.y) > 0.85) {
+          trailUp.set(1, 0, 0);
+        } else {
+          trailUp.set(0, 1, 0);
+        }
+        trailRight.crossVectors(axis, trailUp).normalize();
+        trailForward.crossVectors(trailRight, axis).normalize();
+
+        const chainLength = 2.2 + speedScale * 1.1;
+        const rotateSpeed = 1.1 + speedScale * 1.6;
+        for (let i = 0, i3 = 0; i < particleCount; i++, i3 += 3) {
+          const order = particleCount > 1 ? i / (particleCount - 1) : 0;
+          const lagExtra = seeds[i] > 0.5 ? 0.6 : 0.0;
+          const lag = order * chainLength + lagExtra;
+          const baseX = handPos.x - axis.x * lag;
+          const baseY = handPos.y - axis.y * lag;
+          const baseZ = handPos.z - axis.z * lag;
+
+          const radius = 0.18 + (1.0 - order) * 0.32;
+          const phase = time * rotateSpeed + order * 8.0 + seeds[i] * 6.0;
+          const offsetR = Math.cos(phase) * radius;
+          const offsetU = Math.sin(phase) * radius;
+          const jitter = 0.06;
+          targets[i3] =
+            baseX + trailRight.x * offsetR + trailForward.x * offsetU + trailOffsets[i3] * jitter;
+          targets[i3 + 1] =
+            baseY + trailRight.y * offsetR + trailForward.y * offsetU + trailOffsets[i3 + 1] * jitter;
+          targets[i3 + 2] =
+            baseZ + trailRight.z * offsetR + trailForward.z * offsetU + trailOffsets[i3 + 2] * jitter;
+        }
+      }
+
+      const HandsRef = window.Hands;
+      const hands = HandsRef
+        ? new HandsRef({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
+          })
+        : null;
+
+      updateCameraAvailability();
+
+      if (!hands) {
+        setCameraState("error", "MediaPipe failed to load");
+        startButton.disabled = true;
+        startButton.textContent = "MediaPipe Error";
+      } else {
+        hands.setOptions({
+          maxNumHands: 1,
+          modelComplexity: 1,
+          minDetectionConfidence: 0.6,
+          minTrackingConfidence: 0.6,
+        });
+      }
+
+      if (hands) {
+        hands.onResults((results) => {
+          const landmarks = results.multiHandLandmarks;
+          const handednessList = results.multiHandedness || [];
+          if (!landmarks || landmarks.length === 0) {
+            handPresent = false;
+            handLabel = "NONE";
+            usingFallbackHand = false;
+            updateDetectedState(STATE.NONE);
+            return;
+          }
+
+          handPresent = true;
+          let rightIndex = -1;
+          if (handednessList.length > 0) {
+            for (let i = 0; i < handednessList.length; i += 1) {
+              if (handednessList[i].label === "Right") {
+                rightIndex = i;
+                break;
+              }
+            }
+          }
+
+          let chosenIndex = rightIndex;
+          usingFallbackHand = false;
+          if (chosenIndex < 0) {
+            chosenIndex = 0;
+            usingFallbackHand = true;
+          }
+          const chosenHandedness = handednessList[chosenIndex]
+            ? handednessList[chosenIndex].label
+            : "Unknown";
+          handLabel = rightIndex >= 0 ? "Right" : chosenHandedness;
+
+          const lm = landmarks[chosenIndex];
+          updateDetectedState(detectGesture(lm));
+
+          const palm = {
+            x: (lm[0].x + lm[9].x) * 0.5,
+            y: (lm[0].y + lm[9].y) * 0.5,
+            z: (lm[0].z + lm[9].z) * 0.5,
+          };
+          handTarget.set((0.5 - palm.x) * 6.0, (0.5 - palm.y) * 4.0, palm.z * 6.0);
+        });
+      }
+
+      async function startCamera() {
+        if (!hands || !updateCameraAvailability()) {
+          return;
+        }
+        setCameraState("requesting", "Requesting camera access");
+        startButton.disabled = true;
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { width: 1280, height: 720 },
+            audio: false,
+          });
+          video.srcObject = stream;
+          await video.play();
+          startButton.style.display = "none";
+          setCameraState("active", "Camera active");
+        } catch (error) {
+          let message = "Camera access denied";
+          if (error && error.name === "NotFoundError") {
+            message = "No camera device found";
+          } else if (error && error.name === "NotAllowedError") {
+            message = "Camera permission blocked";
+          } else if (error && error.name === "NotReadableError") {
+            message = "Camera is in use";
+          }
+          setCameraState("error", message);
+          startButton.disabled = false;
+          startButton.textContent = "Retry Camera";
+          console.error(error);
+        }
+      }
+
+      startButton.addEventListener("click", startCamera);
+
+      const clock = new THREE.Clock();
+
+      function updateParticles(delta, time) {
+        applySequenceGesture();
+        activeState = detectedState;
+        if (activeState !== previousState) {
+          if (activeState === STATE.SWORD) {
+            swordTimer = 0;
+          }
+          previousState = activeState;
+        }
+        if (activeState === STATE.SWORD) {
+          swordTimer += delta;
+        } else {
+          swordTimer = 0;
+        }
+        const cfg = stateConfig[activeState] || stateConfig[STATE.NONE];
+        material.uniforms.uLerp.value = cfg.lerp;
+        material.uniforms.uSpin.value = cfg.spin;
+        material.uniforms.uPointSize.value = cfg.size;
+        material.uniforms.uShape.value = activeState === STATE.SWORD ? 1 : 0;
+        material.uniforms.uDrift.value = cfg.drift;
+        material.uniforms.uFlicker.value = 0.0;
+        material.uniforms.uOrient.value = activeState === STATE.RING ? 1.0 : 0.0;
+        material.uniforms.uCenter.value.copy(followOffset);
+
+        const speedScale = Math.min(handSpeed * 0.12, 1.6);
+        if (handPresent) {
+          followOffset.copy(handPos).multiplyScalar(0.65);
+        } else {
+          followOffset.set(0, 0, 0);
+        }
+        if (activeState === STATE.TRAIL && handPresent) {
+          applyTrail(time, speedScale, delta);
+          material.uniforms.uPulse.value = 0.0;
+        } else if (activeState === STATE.SWORD) {
+          const pulse = 0.06 * Math.sin(time * 2.4);
+          const settle = Math.min(Math.max((swordTimer - 1.0) / 1.4, 0), 1);
+          applySwordMotion(time, settle);
+          material.uniforms.uPulse.value = pulse;
+          material.uniforms.uFlicker.value = 0.65;
+        } else if (activeState === STATE.ORB) {
+          const energy = 0.05 * Math.sin(time * 1.4);
+          applyOrb(time, cfg.spinRate, 1.0 + energy);
+          material.uniforms.uPulse.value = energy;
+          material.uniforms.uFlicker.value = 0.2;
+        } else if (activeState === STATE.RING) {
+          applyRing(time, cfg.spinRate);
+          material.uniforms.uPulse.value = 0.0;
+        } else {
+          applyTemplate(idleTemplate, 1.0);
+          material.uniforms.uPulse.value = 0.0;
+        }
+
+        const accel = cfg.spring * Math.min(delta * 60, 2.0);
+        const damp = Math.pow(cfg.damping, Math.min(delta * 60, 2.0));
+        const magnet = cfg.magnet || 0.0;
+        const swirl = cfg.swirl || 0.0;
+        if (cfg.smooth) {
+          const base = cfg.follow || 0.02;
+          const step = Math.min(delta * 60, 1.5);
+          for (let i = 0, i3 = 0; i < particleCount; i++, i3 += 3) {
+            const dx = targets[i3] - positions[i3];
+            const dy = targets[i3 + 1] - positions[i3 + 1];
+            const dz = targets[i3 + 2] - positions[i3 + 2];
+            const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+            const magnetBoost = 0.25 + Math.min(dist, 2.5) * magnet;
+            const factor = base * step * magnetBoost;
+
+            positions[i3] += dx * factor;
+            positions[i3 + 1] += dy * factor;
+            positions[i3 + 2] += dz * factor;
+            velocities[i3] = 0;
+            velocities[i3 + 1] = 0;
+            velocities[i3 + 2] = 0;
+          }
+
+          const minDist = 0.25 + cfg.size * 0.09;
+          const minDist2 = minDist * minDist;
+          const repelStrength = 0.26;
+          for (let i = 0; i < particleCount; i += 1) {
+            const i3 = i * 3;
+            for (let j = i + 1; j < particleCount; j += 1) {
+              const j3 = j * 3;
+              const dx = positions[i3] - positions[j3];
+              const dy = positions[i3 + 1] - positions[j3 + 1];
+              const dz = positions[i3 + 2] - positions[j3 + 2];
+              const dist2 = dx * dx + dy * dy + dz * dz;
+              if (dist2 > 0.000001 && dist2 < minDist2) {
+                const dist = Math.sqrt(dist2);
+                const push = ((minDist - dist) / minDist) * repelStrength;
+                const nx = dx / dist;
+                const ny = dy / dist;
+                const nz = dz / dist;
+                positions[i3] += nx * push;
+                positions[i3 + 1] += ny * push;
+                positions[i3 + 2] += nz * push;
+                positions[j3] -= nx * push;
+                positions[j3 + 1] -= ny * push;
+                positions[j3 + 2] -= nz * push;
+              }
+            }
+          }
+        } else {
+          for (let i = 0, i3 = 0; i < particleCount; i++, i3 += 3) {
+            const dx = targets[i3] - positions[i3];
+            const dy = targets[i3 + 1] - positions[i3 + 1];
+            const dz = targets[i3 + 2] - positions[i3 + 2];
+            let vx = velocities[i3] + dx * accel;
+            let vy = velocities[i3 + 1] + dy * accel;
+            let vz = velocities[i3 + 2] + dz * accel;
+
+            if (magnet > 0.0) {
+              const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+              const magnetBoost = magnet * (0.6 + Math.min(dist, 3.0) * 0.35);
+              vx += dx * accel * magnetBoost;
+              vy += dy * accel * magnetBoost;
+              vz += dz * accel * magnetBoost;
+            }
+
+            if (swirl > 0.0) {
+              if (activeState === STATE.RING) {
+                const tx = -positions[i3 + 1];
+                const ty = positions[i3];
+                vx += tx * swirl * accel * 0.4;
+                vy += ty * swirl * accel * 0.4;
+              } else if (activeState === STATE.ORB) {
+                const tx = positions[i3 + 2];
+                const tz = -positions[i3];
+                vx += tx * swirl * accel * 0.35;
+                vz += tz * swirl * accel * 0.35;
+              }
+            }
+
+            velocities[i3] = vx * damp;
+            velocities[i3 + 1] = vy * damp;
+            velocities[i3 + 2] = vz * damp;
+            positions[i3] += velocities[i3];
+            positions[i3 + 1] += velocities[i3 + 1];
+            positions[i3 + 2] += velocities[i3 + 2];
+          }
+        }
+
+        geometry.attributes.position.needsUpdate = true;
+        geometry.attributes.aTarget.needsUpdate = true;
+      }
+
+      function updateHandMotion(delta) {
+        if (!handPresent) {
+          handTarget.set(0, 0, 0);
+        }
+        handPos.lerp(handTarget, 0.25);
+        handEcho.lerp(handPos, 0.08);
+        handDelta.subVectors(handPos, lastHandPos);
+        const speed = handDelta.length() / Math.max(delta, 0.001);
+        handVel.copy(handDelta).divideScalar(Math.max(delta, 0.001));
+        if (handVel.lengthSq() > 0.0001) {
+          handDir.copy(handVel).normalize();
+        }
+        handSpeed += (speed - handSpeed) * 0.15;
+        lastHandPos.copy(handPos);
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+        const delta = clock.getDelta();
+        const time = clock.elapsedTime;
+        material.uniforms.uTime.value = time;
+
+        const now = performance.now();
+        if (hands && video.readyState >= 2 && !handBusy && now - lastHandFrame > 33) {
+          handBusy = true;
+          lastHandFrame = now;
+          hands
+            .send({ image: video })
+            .catch(() => {})
+            .finally(() => {
+              handBusy = false;
+            });
+        }
+
+        updateHandMotion(delta);
+        updateParticles(delta, time);
+        updateHud();
+        composer.render();
+      }
+
+      function onResize() {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
+        composer.setSize(width, height);
+        bloom.setSize(width, height);
+      }
+
+      window.addEventListener("resize", onResize);
+      animate();
+    </script>
+  </body>
+</html>
